@@ -1,6 +1,7 @@
 #include<iostream>
 #include<algorithm>
 #include<pthread.h>
+#include<unistd.h>
 using namespace std;
 
 void QuickSort(int*a, int left, int right);
@@ -15,12 +16,24 @@ typedef struct _QsortThreadData{
 
 int a_size= 0;
 int max_threads;
+int n_threads= 0;
+pthread_mutex_t mutex_n_threads;
+
 
 int main(int argc, char *argv[])
 { 
     int a[] = {4,3,7,5,10,2,1};
     
 	a_size = sizeof(a)/sizeof(int);
+	
+	int n_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+	if(n_cpus > 0){
+		max_threads = 2*n_cpus;
+	}else{
+		max_threads = 8;
+	}
+	
+	pthread_mutex_init(&mutex_n_threads, NULL);
 	
 	cout <<"before sorting: ";
 	for(int i = 0; i < a_size; ++i){
@@ -35,9 +48,8 @@ int main(int argc, char *argv[])
 	    cout << a[i] << " ";
 	}
 	cout << "\n";
-    //max_threads = 8; //TODO using number of threads to be created
-	
-	
+    	
+	return 0;
 }
 
 void QuickSort(int*a, int left, int right){
@@ -71,12 +83,15 @@ void* QuickSortThread(void*arg){
 	d2.right = right;
 	d2.a = a;
 	 
+	 pthread_mutex_lock(&mutex_n_threads);
+	++n_threads;
+	pthread_mutex_unlock(&mutex_n_threads);
+	
 	pthread_t t;
-	if(pthread_create(&t, NULL, QuickSortThread, (void*)&d1) != 0){
+	if(pthread_create(&t, NULL, QuickSortThread, (void*)&d1) != 0 && n_threads >= max_threads){
 	    
-	    cout << "fail creating a thread \n";
-		
-		QuickSortThread(&d1);
+	    cout << "fail creating a thread \n";	
+	    QuickSortThread(&d1);
 	}
 	QuickSortThread(&d2);
 	
