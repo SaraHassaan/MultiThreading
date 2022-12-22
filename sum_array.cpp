@@ -61,5 +61,4 @@ int main(int argc, char *argv[])
 	cout << total_sum;
 	
 	return 0;
-};
 }
