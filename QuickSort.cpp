@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 	    cout << a[i] << " ";
 	}
 	cout << "\n";
-    	
+    	pthread_mutex_destroy(&mutex_n_threads);
 	return 0;
 }
 
